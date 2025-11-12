@@ -13,19 +13,17 @@
 <meta name="twitter:image" content="https://i.imgur.com/jqIcD0e.png">
 <meta property="og:image" content="https://i.imgur.com/jqIcD0e.png">
 <meta property="og:url" content="https://the-word.fun">
-
 <!-- === END OF META TAGS === -->
 
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Sans+Mono:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
 <style>
-  /* --- Font Definition --- */
   @font-face {
     font-family: 'Galter';
     src: url('galter.otf') format('opentype');
   }
 
   :root{--accent:#c3ed1d;--muted:rgba(255,255,255,.75)}
-  
+
   html, body {
     height: 100%;
     margin: 0;
@@ -33,17 +31,17 @@
 
   body{
     font-family: "Ubuntu Sans Mono", monospace;
-    background: url('bg.png') center/cover fixed; 
-    color: #fff; 
-    display: flex; 
-    align-items: center; 
+    background: url('bg.png') center/cover fixed;
+    color: #fff;
+    display: flex;
+    align-items: center;
     justify-content: center;
     padding: 20px;
     box-sizing: border-box;
   }
 
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:-1}
-  
+
   .top-right-info {
     position: fixed;
     top: 20px;
@@ -64,7 +62,7 @@
   .top-right-info a:hover {
     opacity: 1;
   }
-  
+
   .how-it-works-text {
     font-size: 12px;
     opacity: 0.7;
@@ -83,12 +81,12 @@
 
   h1{
     font-family: 'Galter', sans-serif;
-    font-size: 48px; 
+    font-size: 48px;
     margin: 6px 0 10px;
   }
 
   p.sub{opacity:.9;font-size:14px;margin:6px 0 24px}
-  
+
   .btn{
     display:inline-block;
     padding:14px 28px;
@@ -105,7 +103,7 @@
     background: var(--accent);
     color: #111;
   }
-  
+
   .small{font-size:12px;opacity:.6;margin-top:8px}
 
   #after {
@@ -117,18 +115,17 @@
     opacity: 0.8;
     color: white;
   }
-
 </style>
 </head>
 <body>
   <div class="overlay"></div>
-  
+
   <div class="top-right-info">
     <a href="https://twitter.com/TheWordCoin" target="_blank">Visit Twitter</a>
     <div class="how-it-works-text">
       1. Click "Share on X" to get your link.<br>
-      2. Clicks on your link increase your count.<br>
-      3. More counts = a bigger reward claim.
+      2. Share your unique ref.<br>
+      3. Tweets tracked by your ref = higher reward share.
     </div>
   </div>
 
@@ -142,7 +139,7 @@
     </div>
 
     <div id="after" style="display:none;">
-      <p>Your counts: <span id="clicks">0</span></p>
+      <p>Your ref: <span id="refDisplay"></span></p>
       <a id="shareLink">view my link</a>
     </div>
   </div>
@@ -152,52 +149,29 @@ const storageKey = 'theword_ref';
 const ref = getOrCreateRef();
 const spreadBtn = document.getElementById('spread');
 const after = document.getElementById('after');
-const clicksEl = document.getElementById('clicks');
 const shareLink = document.getElementById('shareLink');
+const refDisplay = document.getElementById('refDisplay');
 
 function getOrCreateRef(){
   let r = localStorage.getItem(storageKey);
   if(r) return r;
-  r = 'W'+Math.random().toString(36).slice(2,9);
+  r = 'W' + Math.random().toString(36).slice(2,9);
   localStorage.setItem(storageKey, r);
   return r;
 }
 
-let data = JSON.parse(localStorage.getItem(ref)) || { clicks: 0 };
-
 function updateUI(){
-  clicksEl.textContent = data.clicks;
   shareLink.href = '?r=' + ref;
-}
-
-function simulateClick(){
-  let increment;
-  if(Math.random() < 0.95){ // 95% chance for 1
-    increment = 1;
-  } else { // 5% chance for 2 or 3
-    increment = Math.floor(Math.random() * 2) + 2;
-  }
-
-  data.clicks += increment;
-  localStorage.setItem(ref, JSON.stringify(data));
-  updateUI();
+  refDisplay.textContent = ref;
 }
 
 spreadBtn.addEventListener('click', () => {
-  const tweetText = "We are here to spread The Word @TheWordCoin";
-  const urlToShare = location.origin + '/?r=' + ref;
-  const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(urlToShare)}`;
+  const tweetText = `We are here to spread The Word @TheWordCoin\nhttps://the-word.fun/?r=${ref}\n>${ref}`;
+  const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
   
   window.open(tweetUrl, '_blank');
   after.style.display = 'block';
-  simulateClick();
 });
-
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.has('r')) {
-    simulateClick();
-    after.style.display = 'block';
-}
 
 updateUI();
 </script>
