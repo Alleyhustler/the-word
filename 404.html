@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>The Degen Bar — The Word</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik+Mono+One&display=swap" rel="stylesheet">
+<style>
+  :root{--accent:#c3ed1d;--muted:rgba(255,255,255,.75)}
+  body{height:100vh;margin:0;font-family:"Rubik Mono One",sans-serif;
+       background: url('background.png') center/cover fixed; color:#fff; display:flex; align-items:center; justify-content:center;}
+  .overlay{position:absolute;inset:0;background:rgba(0,0,0,.75);z-index:0}
+  .card{position:relative;z-index:1;text-align:center;padding:34px;border-radius:14px;min-width:320px;backdrop-filter:blur(4px)}
+  img.logo{width:84px;height:84px;margin-bottom:18px}
+  h1{font-size:28px;margin:6px 0}
+  p.sub{opacity:.8;font-size:13px;margin:6px 0 18px}
+  .btn{display:inline-block;padding:12px 22px;border-radius:999px;border:1px solid rgba(255,255,255,.12);cursor:pointer;background:transparent;color:var(--accent);font-weight:700}
+  .small{font-size:13px;opacity:.85;margin-top:12px}
+  .airdrop{margin-top:14px}
+  .bar{height:8px;background:rgba(255,255,255,.08);border-radius:8px;overflow:hidden;width:260px;margin:10px auto}
+  .bar .fill{height:100%;background:var(--accent);width:0;transition:width 0.9s}
+  .leader{margin-top:18px;font-size:13px;opacity:.9}
+  a.twitter{position:fixed;right:14px;bottom:14px;opacity:.9}
+</style>
+</head>
+<body>
+  <div class="overlay"></div>
+  <div class="card">
+    <img src="logo.png" alt="logo" class="logo" />
+    <h1>The Degen Bar</h1>
+    <p class="sub">“Those who spread The Word shall rise.”</p>
+
+    <div>
+      <button id="spread" class="btn">Spread The Word</button>
+    </div>
+
+    <div id="after" style="display:none">
+      <div class="small">Your airdrop share (est): <span id="share">0%</span></div>
+      <div class="bar"><div id="fill" class="fill"></div></div>
+      <div class="leader">Your clicks: <span id="clicks">0</span> — <a id="shareLink" href="#" target="_blank">view my link</a></div>
+    </div>
+
+    <div class="small" style="margin-top:10px;opacity:.6">
+      Viral mechanic: more clicks = more share. Top 10 split creator rewards.
+    </div>
+    <div style="margin-top:12px">
+      <button id="showBoard" class="btn" style="padding:8px 14px;font-size:13px">Show Leaderboard</button>
+    </div>
+
+    <div id="board" style="display:none;margin-top:12px;color:#ddd;text-align:left"></div>
+  </div>
+
+  <a class="twitter" href="https://twitter.com/TheWordCoin" target="_blank" aria-label="TheWordCoin">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><path d="M24 4.56c-.89.39-1.84.65-2.84.77a4.94 4.94 0 0 0 2.16-2.72c-.95.56-2 .96-3.12 1.18a4.92 4.92 0 0 0-8.4 4.49A13.95 13.95 0 0 1 1.64 3.16a4.92 4.92 0 0 0 1.52 6.57 4.93 4.93 0 0 1-2.23-.62v.06a4.93 4.93 0 0 0 3.95 4.82 4.95 4.95 0 0 1-2.22.08 4.93 4.93 0 0 0 4.6 3.42A9.87 9.87 0 0 1 0 21.54 13.9 13.9 0 0 0 7.55 24c9.06 0 14.01-7.5 14.01-14v-.64A9.93 9.93 0 0 0 24 4.56z"/></svg>
+  </a>
+
+<script>
+const API_BASE = ''; // if same origin, leave empty. If remote, e.g. 'https://api.theword.club'
+const storageKey = 'theword_ref';
+const ref = getOrCreateRef();
+const spreadBtn = document.getElementById('spread');
+const after = document.getElementById('after');
+const shareEl = document.getElementById('share');
+const fillEl = document.getElementById('fill');
+const clicksEl = document.getElementById('clicks');
+const shareLink = document.getElementById('shareLink');
+const boardEl = document.getElementById('board');
+const showBoard = document.getElementById('showBoard');
+
+function getOrCreateRef(){
+  let r = localStorage.getItem(storageKey);
+  if(r) return r;
+  // short random code — human-friendly
+  r = 'W'+Math.random().toString(36).slice(2,9);
+  localStorage.setItem(storageKey, r);
+  return r;
+}
+
+// Build tweet link with your domain + referral
+function tweetUrl(){
+  const text = encodeURIComponent("We are here to spread The Word @TheWordCoin");
+  const url = encodeURIComponent(location.origin + '/r/' + ref);
+  return `https://twitter.com/intent/tweet?text=${text}%20${url}`;
+}
+
+spreadBtn.addEventListener('click', () => {
+  // open tweet
+  window.open(tweetUrl(), '_blank');
+  // show UI to claim later and periodically poll server for clicks
+  after.style.display = 'block';
+  shareLink.href = location.origin + '/r/' + ref;
+  poll();
+});
+
+// Poll for current click count and leaderboard share
+let pollTimer = null;
+async function poll(){
+  await fetchScore();
+  if(!pollTimer) pollTimer = setInterval(fetchScore, 7000);
+}
+
+async function fetchScore(){
+  try {
+    const res = await fetch(`${API_BASE}/api/score/${ref}`);
+    if(!res.ok) return;
+    const j = await res.json();
+    const clicks = j.clicks || 0;
+    const totalClicks = j.total || 1;
+    // compute share: proportion of clicks relative to top/total (you can choose logic)
+    // simple % = (clicks/totalClicks)*100 capped
+    const pct = Math.min(Math.round((clicks / Math.max(totalClicks,1)) * 100), 100);
+    clicksEl.textContent = clicks;
+    shareEl.textContent = pct + '%';
+    fillEl.style.width = pct + '%';
+  } catch(e){ console.warn('fetchscore', e) }
+}
+
+showBoard.addEventListener('click', async () => {
+  try {
+    const res = await fetch(`${API_BASE}/api/leaderboard`);
+    const j = await res.json();
+    boardEl.innerHTML = '<strong>Top 10</strong><ol>';
+    j.slice(0,10).forEach(item=>{
+      boardEl.innerHTML += `<li style="margin:6px 0">${item.ref} — ${item.clicks} clicks</li>`;
+    });
+    boardEl.innerHTML += '</ol>';
+    boardEl.style.display = 'block';
+  } catch(e){ console.warn(e) }
+});
+</script>
+</body>
+</html>
