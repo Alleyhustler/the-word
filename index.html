@@ -5,22 +5,19 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>The Word</title>
 
-<!-- === TWITTER CARD META TAGS (ADD THESE) === -->
-<!-- This tells Twitter what kind of card to show -->
+<!-- === TWITTER CARD META TAGS === -->
 <meta name="twitter:card" content="summary_large_image">
-<!-- Your Twitter handle (optional) -->
 <meta name="twitter:site" content="@TheWordCoin">
-<!-- The title that will appear on the card -->
 <meta name="twitter:title" content="The Word">
-<!-- The description that will appear below the title -->
 <meta name="twitter:description" content="“Those who spread The Word shall rise.”">
-<!-- IMPORTANT: The direct link to the image you want to show. Must be an absolute URL. -->
-<meta name="twitter:image" content="https://yourdomain.com/path/to/your/tweet-image.png">
+<!-- Here is your new image URL -->
+<meta name="twitter:image" content="https://i.imgur.com/pVtArdQ.png">
 
-<!-- Open Graph tags (good practice for other platforms like Facebook) -->
+<!-- Open Graph tags (for Facebook, etc.) -->
 <meta property="og:title" content="The Word">
 <meta property="og:description" content="“Those who spread The Word shall rise.”">
-<meta property="og:image" content="https://yourdomain.com/path/to/your/tweet-image.png">
+<!-- Here is your new image URL -->
+<meta property="og:image" content="https://i.imgur.com/pVtArdQ.png">
 <meta property="og:url" content="https://yourdomain.com">
 <!-- === END OF META TAGS === -->
 
@@ -83,7 +80,7 @@
     position: relative;
     text-align: center;
     padding: 34px;
-    border-radius: 14px; /* Fixed a syntax error here */
+    border-radius: 14px;
     min-width: 420px;
     backdrop-filter: blur(5px);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -193,7 +190,6 @@ function simulateClick(){
 
 spreadBtn.addEventListener('click', () => {
   const tweetText = "We are here to spread The Word @TheWordCoin";
-  // The URL in the tweet will be your main site URL with the referral
   const urlToShare = location.origin + '/?r=' + ref;
   const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(urlToShare)}`;
   
