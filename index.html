@@ -56,78 +56,48 @@
   </a>
 
 <script>
-const API_BASE = ''; // if same origin, leave empty. If remote, e.g. 'https://api.theword.club'
 const storageKey = 'theword_ref';
 const ref = getOrCreateRef();
 const spreadBtn = document.getElementById('spread');
 const after = document.getElementById('after');
 const shareEl = document.getElementById('share');
-const fillEl = document.getElementById('fill');
 const clicksEl = document.getElementById('clicks');
 const shareLink = document.getElementById('shareLink');
-const boardEl = document.getElementById('board');
-const showBoard = document.getElementById('showBoard');
 
 function getOrCreateRef(){
   let r = localStorage.getItem(storageKey);
   if(r) return r;
-  // short random code — human-friendly
   r = 'W'+Math.random().toString(36).slice(2,9);
   localStorage.setItem(storageKey, r);
   return r;
 }
 
-// Build tweet link with your domain + referral
-function tweetUrl(){
-  const text = encodeURIComponent("We are here to spread The Word @TheWordCoin");
-  const url = encodeURIComponent(location.origin + '/r/' + ref);
-  return `https://twitter.com/intent/tweet?text=${text}%20${url}`;
+// get or create fake local clicks
+let data = JSON.parse(localStorage.getItem(ref)) || { clicks: 0, share: 0 };
+
+function updateUI(){
+  clicksEl.textContent = data.clicks;
+  shareEl.textContent = data.share.toFixed(1) + '%';
+  shareLink.href = `?r=${ref}`;
+}
+
+// simulate growth
+function simulateClick(){
+  data.clicks += Math.floor(Math.random()*3)+1; // 1-3 clicks per visit
+  data.share = Math.min(100, data.share + Math.random()*1); // 0-1% share growth
+  localStorage.setItem(ref, JSON.stringify(data));
+  updateUI();
 }
 
 spreadBtn.addEventListener('click', () => {
-  // open tweet
-  window.open(tweetUrl(), '_blank');
-  // show UI to claim later and periodically poll server for clicks
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent("We are here to spread The Word @TheWordCoin")} ${encodeURIComponent(location.origin+'?r='+ref)}`, '_blank');
   after.style.display = 'block';
-  shareLink.href = location.origin + '/r/' + ref;
-  poll();
+  simulateClick();
 });
 
-// Poll for current click count and leaderboard share
-let pollTimer = null;
-async function poll(){
-  await fetchScore();
-  if(!pollTimer) pollTimer = setInterval(fetchScore, 7000);
-}
-
-async function fetchScore(){
-  try {
-    const res = await fetch(`${API_BASE}/api/score/${ref}`);
-    if(!res.ok) return;
-    const j = await res.json();
-    const clicks = j.clicks || 0;
-    const totalClicks = j.total || 1;
-    // compute share: proportion of clicks relative to top/total (you can choose logic)
-    // simple % = (clicks/totalClicks)*100 capped
-    const pct = Math.min(Math.round((clicks / Math.max(totalClicks,1)) * 100), 100);
-    clicksEl.textContent = clicks;
-    shareEl.textContent = pct + '%';
-    fillEl.style.width = pct + '%';
-  } catch(e){ console.warn('fetchscore', e) }
-}
-
-showBoard.addEventListener('click', async () => {
-  try {
-    const res = await fetch(`${API_BASE}/api/leaderboard`);
-    const j = await res.json();
-    boardEl.innerHTML = '<strong>Top 10</strong><ol>';
-    j.slice(0,10).forEach(item=>{
-      boardEl.innerHTML += `<li style="margin:6px 0">${item.ref} — ${item.clicks} clicks</li>`;
-    });
-    boardEl.innerHTML += '</ol>';
-    boardEl.style.display = 'block';
-  } catch(e){ console.warn(e) }
-});
+// also increment clicks if someone opens the link directly
+simulateClick();
+updateUI();
 </script>
 </body>
 </html>
